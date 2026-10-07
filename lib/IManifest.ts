@@ -88,8 +88,6 @@ export function getManifestCandidateIris(url: string): string[] {
     url,
     // The extension-less document URL (needed for RDFa test suite)
     extLess,
-    // The extension-less document URL with a '#manifest' fragment (needed for SPARQL 1.2 test suite)
-    `${extLess}#manifest`,
     // The extension-less document URL with the last '/' replaced with a '#' (needed for RDFstar test suite)
     // @see https://github.com/w3c/rdf-star/issues/269
     extLess.replace(/\/manifest$/u, '#manifest'),
