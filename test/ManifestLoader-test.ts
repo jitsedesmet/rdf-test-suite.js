@@ -99,74 +99,6 @@ const streamifyString = require('streamify-string');
   rdfs:label "Jena Lateral tests".
 `);
       break;
-    case 'http://ex.org/sparql12/syntax/manifest.ttl':
-      body = streamifyString(`
-@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix mf:     <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#> .
-@prefix qt:     <http://www.w3.org/2001/sw/DataAccess/tests/test-query#> .
-@prefix :      <http://ex.org/sparql12/syntax/manifest#> .
-
-:manifest a mf:Manifest ;
-  rdfs:label "Unresolvable manifest tests";
-  mf:entries (:test1).
-
-:test1 a mf:PositiveSyntaxTest ;
-  mf:name "test1" ;
-  mf:action <test1.rq> .
-`);
-      break;
-    case 'http://ex.org/fragment/manifest.ttl':
-      body = streamifyString(`
-@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix mf:     <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#> .
-@prefix qt:     <http://www.w3.org/2001/sw/DataAccess/tests/test-query#> .
-@prefix :      <http://ex.org/fragment/manifest.ttl#> .
-
-:manifest a mf:Manifest ;
-  rdfs:label "Hash-manifest tests";
-  mf:entries (:test1).
-
-:test1 a mf:PositiveSyntaxTest ;
-  mf:name "test1" ;
-  mf:action <test1.rq> .
-`);
-      break;
-    case 'http://ex.org/sparql12/manifest.ttl':
-      body = streamifyString(`
-@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix mf:     <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#> .
-@prefix qt:     <http://www.w3.org/2001/sw/DataAccess/tests/test-query#> .
-
-<> a mf:Manifest ;
-  rdfs:label "Root";
-  mf:include (<syntax/manifest.ttl>).
-`);
-      break;
-    case 'http://ex.org/allstyles/manifest.ttl':
-      body = streamifyString(`
-@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix mf:     <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#> .
-@prefix qt:     <http://www.w3.org/2001/sw/DataAccess/tests/test-query#> .
-
-<> a mf:Manifest ;
-  rdfs:label "Root";
-  mf:include (
-    <http://valid1>
-    <http://valid1.txt>
-    <http://valid1/with/slash/manifest.jsonld>
-    <http://ex.org/fragment/manifest.ttl#manifest>
-  ).
-`);
-      break;
-    case 'http://ex.org/emptyroot/manifest.ttl':
-      body = streamifyString(`
-@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix mf:     <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#> .
-@prefix qt:     <http://www.w3.org/2001/sw/DataAccess/tests/test-query#> .
-
-<> rdfs:label "Not a manifest".
-`);
-      break;
     case 'https://w3c.github.io/rdf-star/tests/manifest.jsonld':
       body = streamifyString(`
       ## [1] https://www.w3.org/Consortium/Legal/2008/04-testsuite-license
@@ -326,27 +258,6 @@ describe('ManifestLoader', () => {
       expect(
         load.subManifests.map(elem => elem.testEntries),
       ).toHaveLength(8);
-    });
-
-    it('should resolve all supported manifest subject styles through includes', async() => {
-      const load = await loader.from('http://ex.org/allstyles/manifest.ttl');
-      expect(load.subManifests.map(m => m.uri)).toEqual([
-        'http://valid1',
-        'http://valid1',
-        'http://valid1/with/slash#manifest',
-        'http://ex.org/fragment/manifest.ttl#manifest',
-      ]);
-      expect(load.subManifests.map(m => m.testEntries.length)).toEqual([ 0, 0, 0, 1 ]);
-    });
-
-    it('should error instead of yielding 0 tests on an include whose manifest subject is not a candidate', async() => {
-      await expect(loader.from('http://ex.org/sparql12/manifest.ttl')).rejects
-        .toThrow('Could not find a manifest resource in the document at http://ex.org/sparql12/syntax/manifest.ttl');
-    });
-
-    it('should error on a document whose candidate resource has no manifest properties', async() => {
-      await expect(loader.from('http://ex.org/emptyroot/manifest.ttl')).rejects
-        .toThrow('Could not find a manifest resource in the document at http://ex.org/emptyroot/manifest.ttl');
     });
 
     it('should error on invalid submanifests', () => {

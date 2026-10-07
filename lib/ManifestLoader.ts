@@ -2,7 +2,7 @@ import type { Resource } from 'rdf-object';
 import { RdfObjectLoader } from 'rdf-object';
 import { termToString } from 'rdf-string';
 import type { IManifest } from './IManifest';
-import { findManifestResource, getManifestCandidateIris, manifestFromResource } from './IManifest';
+import { manifestFromResource } from './IManifest';
 import type { ITestCase } from './testcase/ITestCase';
 import type { ITestCaseHandler } from './testcase/ITestCaseHandler';
 import type { IFetchOptions } from './Util';
@@ -48,19 +48,29 @@ export class ManifestLoader {
     // Dereference the URL and load it
     await objectLoader.import(parsed);
 
-    // The fragment is resolved against the fetched URL, which may differ from the requested one after redirects
-    const manifestUrl = requestedFragment ? `${url}#${requestedFragment}` : url;
-    const findManifest = (): Resource => {
-      const manifest = findManifestResource(objectLoader.resources, manifestUrl);
-      if (!manifest) {
-        throw new Error(`Could not find a manifest resource in the document at ${url}, tried: ${
-          getManifestCandidateIris(manifestUrl).join(', ')}`);
+    function findManifest(): Resource {
+      const extLess = url.slice(0, url.lastIndexOf('.'));
+      let result: Resource | undefined;
+      // Highest priority: the resource the caller explicitly named via a fragment,
+      // resolved against the fetched (fragment-less) document URL.
+      if (requestedFragment) {
+        result = objectLoader.resources[`${url}#${requestedFragment}`];
       }
-      return manifest;
-    };
+      // Second try the same URL as the document URL
+      result ??= objectLoader.resources[url];
+      // Also try extension-less manifest URL (needed for RDFa test suite)
+      result ??= objectLoader.resources[extLess];
+      // Also try extension-less and with the last '/' replaced with a '#' (needed for RDFstar test suite)
+      // @see https://github.com/w3c/rdf-star/issues/269
+      return result ?? objectLoader.resources[extLess.replace(/\/manifest$/u, '#manifest')];
+    }
 
     // Import all sub-manifests
     let manifest: Resource = findManifest();
+
+    if (!manifest) {
+      throw new Error(`Could not find a resource ${url} in the document at ${url}`);
+    }
     const includeJobs: Promise<any>[] = [];
     for (const includeList of manifest.properties.include) {
       for (const include of includeList.list) {
