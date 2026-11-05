@@ -35,15 +35,31 @@ describe('createLimitedFetch', () => {
     expect(fetchInner).toHaveBeenCalledTimes(1);
   });
 
-  it('should not limit the number of concurrent requests by default', async() => {
-    const pending = [ 1, 2, 3, 4, 5 ].map(() => deferred<Response>());
+  it('should limit the number of concurrent requests to 16 by default', async() => {
+    const pending = Array.from({ length: 20 }, () => deferred<Response>());
     let i = 0;
     const fetchInner = jest.fn(() => pending[i++].promise);
     const fetchLimited = createLimitedFetch({}, fetchInner);
 
     const responses = pending.map(() => fetchLimited('http://example.org/'));
     await flushPromises();
-    expect(fetchInner).toHaveBeenCalledTimes(5);
+    expect(fetchInner).toHaveBeenCalledTimes(16);
+
+    for (const { resolve } of pending) {
+      resolve(new Response('ABC'));
+    }
+    await Promise.all(responses);
+  });
+
+  it('should not limit the number of concurrent requests if the limit is 0', async() => {
+    const pending = Array.from({ length: 20 }, () => deferred<Response>());
+    let i = 0;
+    const fetchInner = jest.fn(() => pending[i++].promise);
+    const fetchLimited = createLimitedFetch({ maxConcurrentRequests: 0 }, fetchInner);
+
+    const responses = pending.map(() => fetchLimited('http://example.org/'));
+    await flushPromises();
+    expect(fetchInner).toHaveBeenCalledTimes(20);
 
     for (const { resolve } of pending) {
       resolve(new Response('ABC'));
@@ -79,7 +95,7 @@ describe('createLimitedFetch', () => {
     const fetchInner = jest.fn()
       .mockRejectedValueOnce(new Error('Fetch error'))
       .mockResolvedValueOnce(new Response('ABC'));
-    const fetchLimited = createLimitedFetch({ maxConcurrentRequests: 1 }, fetchInner);
+    const fetchLimited = createLimitedFetch({ maxConcurrentRequests: 1, retries: 0 }, fetchInner);
 
     const response1 = fetchLimited('http://example.org/1');
     const response2 = fetchLimited('http://example.org/2');
@@ -87,9 +103,16 @@ describe('createLimitedFetch', () => {
     await expect(response2).resolves.toBeInstanceOf(Response);
   });
 
-  it('should not retry by default', async() => {
+  it('should retry 3 times by default', async() => {
     const fetchInner = jest.fn().mockResolvedValue(new Response(null, { status: 429 }));
-    const fetchLimited = createLimitedFetch({}, fetchInner);
+    const fetchLimited = createLimitedFetch({ retryDelay: 0 }, fetchInner);
+    await expect(fetchLimited('http://example.org/')).resolves.toMatchObject({ status: 429 });
+    expect(fetchInner).toHaveBeenCalledTimes(4);
+  });
+
+  it('should not retry if retries is 0', async() => {
+    const fetchInner = jest.fn().mockResolvedValue(new Response(null, { status: 429 }));
+    const fetchLimited = createLimitedFetch({ retries: 0 }, fetchInner);
     await expect(fetchLimited('http://example.org/')).resolves.toMatchObject({ status: 429 });
     expect(fetchInner).toHaveBeenCalledTimes(1);
   });

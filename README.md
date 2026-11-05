@@ -216,10 +216,10 @@ then the directory will default to `.rdf-test-suite-cache/`._
 
 ### Limiting HTTP requests
 
-By default, all required files are fetched in parallel.
-For large test suites, this may cause servers (such as GitHub Pages) to respond with `429 Too Many Requests`,
+By default, at most 16 HTTP requests run at the same time.
+More parallel requests may cause servers (such as GitHub Pages) to respond with `429 Too Many Requests`,
 or cause network errors such as failing DNS lookups (`EAI_AGAIN`).
-With the `--max-concurrent-requests` option, you can limit the number of HTTP requests that run at the same time.
+This limit can be changed with the `--max-concurrent-requests` option (`0` for unlimited).
 
 ```bash
 $ rdf-test-suite myengine.js https://w3c.github.io/rdf-tests/sparql/sparql11/manifest-all.ttl \
@@ -228,7 +228,7 @@ $ rdf-test-suite myengine.js https://w3c.github.io/rdf-tests/sparql/sparql11/man
 
 With the `--retries` option, requests that fail due to a network error
 or a temporary error status code (`408`, `425`, `429`, `500`, `502`, `503`, `504`)
-are retried with exponential backoff (disabled by default).
+are retried with exponential backoff (3 times by default).
 The delay before the first retry can be set with `--retry-delay` (in milliseconds, defaults to `1000`).
 This delay doubles after every retry, and a random jitter is applied to it.
 

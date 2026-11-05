@@ -9,12 +9,12 @@ export const RETRYABLE_STATUS_CODES: ReadonlySet<number> = new Set([ 408, 425, 4
 export interface IFetchLimitOptions {
   /**
    * The maximum number of HTTP requests that may be in flight at the same time.
-   * If falsy, the number of concurrent requests is unlimited.
+   * Defaults to 16. If 0, the number of concurrent requests is unlimited.
    */
   maxConcurrentRequests?: number;
   /**
    * The number of times a request is retried after a network error or a retryable status code (such as 429).
-   * Defaults to 0.
+   * Defaults to 3.
    */
   retries?: number;
   /**
@@ -48,8 +48,9 @@ export function createLimitedFetch(
   options: IFetchLimitOptions,
   fetchInner: typeof fetch = (input, init) => fetch(input, init),
 ): typeof fetch {
-  const semaphore = options.maxConcurrentRequests ? new Sema(options.maxConcurrentRequests) : undefined;
-  const numOfAttempts = (options.retries ?? 0) + 1;
+  const maxConcurrentRequests = options.maxConcurrentRequests ?? 16;
+  const semaphore = maxConcurrentRequests ? new Sema(maxConcurrentRequests) : undefined;
+  const numOfAttempts = (options.retries ?? 3) + 1;
   const startingDelay = options.retryDelay ?? 1_000;
 
   async function fetchAttempt(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {

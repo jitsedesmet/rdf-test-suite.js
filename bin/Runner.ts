@@ -33,8 +33,8 @@ Options:
   -m      URL to local path mapping (e.g. 'https://w3c.github.io/json-ld-api/|/path/to/folder/')
   -a      Only run tests that have an explicit rdft:Accepted status [default: false]
   -r      Run tests that have an explicit rdft:Rejected status [default: false]
-  --max-concurrent-requests  maximum number of parallel HTTP requests for fetching test files [default: unlimited]
-  --retries                  number of retries for failed HTTP requests (network errors, 429, 5xx) [default: 0]
+  --max-concurrent-requests  maximum number of parallel HTTP requests for fetching test files, 0 for unlimited [default: 16]
+  --retries                  number of retries for failed HTTP requests (network errors, 429, 5xx) [default: 3]
   --retry-delay              delay before the first retry (in milliseconds), doubled on every retry [default: 1000]
 `);
   process.exit(1);
@@ -56,8 +56,6 @@ const engine = require(`${process.cwd()}/${args._[0]}`);
 const defaultConfig = {
   exitWithStatusCode0: false,
   outputFormat: 'detailed',
-  retries: 0,
-  retryDelay: 1000,
   timeOutDuration: 3000,
 };
 
@@ -74,8 +72,8 @@ const config: ITestSuiteConfig = {
   runRejected: Boolean(args.r),
   explicitApproval: Boolean(args.a),
   maxConcurrentRequests: args['max-concurrent-requests'],
-  retries: args.retries ?? defaultConfig.retries,
-  retryDelay: args['retry-delay'] ?? defaultConfig.retryDelay,
+  retries: args.retries,
+  retryDelay: args['retry-delay'],
 };
 
 // Fetch the manifest, run the tests, and print them
