@@ -1,0 +1,61 @@
+# Temporary benchmark for https://github.com/rubensworks/rdf-test-suite.js/pull/149:
+# runs the jsonld-streaming-parser.js spec suites (as in its CI) against
+# rdf-test-suite before (base) and after (pr) the request limiting/retry changes.
+name: Bench jsonld-streaming-parser
+on:
+  push:
+    branches: [claude/stoic-archimedes-7fa1jq]
+    paths: ['.github/workflows/bench-jsonld.yml', '.github/bench/**']
+  workflow_dispatch:
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [base, pr]
+        node-version: [22.x, 24.x, 26.x]
+        include:
+          - variant: base
+            ref: 104bbd98d5ce3b3b338b8171ff08dd9ab05caf25
+          - variant: pr
+            ref: 18ab1a3a8238338600782d07696609941e5bcd5b
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: actions/checkout@v7
+        with:
+          path: bench-src
+      - uses: actions/checkout@v7
+        with:
+          repository: jitsedesmet/rdf-test-suite.js
+          ref: ${{ matrix.ref }}
+          path: rts
+      - uses: actions/checkout@v7
+        with:
+          repository: rubensworks/jsonld-streaming-parser.js
+          path: jsonld
+      - name: Build rdf-test-suite (${{ matrix.variant }})
+        working-directory: rts
+        run: yarn install --frozen-lockfile && yarn run build
+      - name: Build jsonld-streaming-parser and link rdf-test-suite
+        working-directory: jsonld
+        run: |
+          yarn install --frozen-lockfile
+          yarn run build
+          rm -rf node_modules/rdf-test-suite
+          ln -s "$GITHUB_WORKSPACE/rts" node_modules/rdf-test-suite
+      - name: Benchmark
+        run: |
+          echo "| variant | suite | cache | exit | seconds | result | fetch stats |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          L="${{ matrix.variant }}-node${{ matrix.node-version }}"
+          for rep in 1 2 3; do
+            for suite in tordf stream; do
+              bench-src/.github/bench/run.sh "$L" "$suite" cold
+            done
+          done
+          for suite in tordf stream; do
+            bench-src/.github/bench/run.sh "$L" "$suite" warm
+          done
