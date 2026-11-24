@@ -2,6 +2,7 @@ import { Parser } from 'n3';
 import type { Resource } from 'rdf-object';
 import { RdfObjectLoader } from 'rdf-object';
 import { ErrorSkipped } from '../../../lib/ErrorSkipped';
+import { ErrorTest } from '../../../lib/ErrorTest';
 import { TestCaseProtocol, TestCaseProtocolHandler } from '../../../lib/testcase/sparql/TestCaseProtocol';
 
 const endpoint = 'http://example.org/sparql';
@@ -187,6 +188,11 @@ describe('TestCaseProtocolHandler', () => {
       await expect(testCase.test(<any> {}, {})).rejects.toThrow(ErrorSkipped);
       await expect(testCase.test(<any> {}, {}))
         .rejects.toThrow('require an endpoint from startProtocolEndpoint');
+    });
+
+    it('should fail without an endpoint if the engine can start one', async() => {
+      const testCase = await toTestCase(okRequest);
+      await expect(testCase.test(<any> { startProtocolEndpoint: jest.fn() }, {})).rejects.toThrow(ErrorTest);
     });
 
     it('should send the request to the endpoint', async() => {

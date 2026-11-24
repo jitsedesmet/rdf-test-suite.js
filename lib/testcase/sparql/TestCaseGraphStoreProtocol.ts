@@ -209,12 +209,16 @@ export class TestCaseGraphStoreProtocol implements ITestCaseSparql {
 
   /**
    * Determine the endpoint that the graph store protocol requests must be sent to.
+   * Skips the test if the engine cannot start an endpoint, and fails it if the engine can but none was given.
+   * @param engine The engine under test.
    * @param injectArguments The custom engine options.
+   * @return The endpoint URL.
    */
-  public static getEndpoint(injectArguments: IGraphStoreProtocolTestOptions): string {
+  public static getEndpoint(engine: IQueryEngine, injectArguments: IGraphStoreProtocolTestOptions): string {
     const endpoint = injectArguments && injectArguments.graphStoreEndpoint;
     if (!endpoint) {
-      throw new ErrorSkipped('Graph store protocol tests require an endpoint from startGraphStoreEndpoint or the graphStoreEndpoint option.');
+      const message = 'Graph store protocol tests require an endpoint from startGraphStoreEndpoint or the graphStoreEndpoint option.';
+      throw engine.startGraphStoreEndpoint ? new ErrorTest(message) : new ErrorSkipped(message);
     }
     return endpoint;
   }
@@ -258,13 +262,13 @@ export class TestCaseGraphStoreProtocol implements ITestCaseSparql {
       .reduce((filled, [ variable, binding ]) => filled.split(variable).join(binding), value);
   }
 
-  public async test(_engine: IQueryEngine, injectArguments: IGraphStoreProtocolTestOptions): Promise<void> {
+  public async test(engine: IQueryEngine, injectArguments: IGraphStoreProtocolTestOptions): Promise<void> {
     const unsupported = this.requiredFeatures.filter(feature => !KNOWN_FEATURES.has(feature));
     if (unsupported.length > 0) {
       throw new ErrorSkipped(`Unsupported graph store protocol features: ${unsupported.join(', ')}`);
     }
 
-    const endpoint = TestCaseGraphStoreProtocol.getEndpoint(injectArguments);
+    const endpoint = TestCaseGraphStoreProtocol.getEndpoint(engine, injectArguments);
     await this.clearGraphs(endpoint);
 
     const templates: Record<string, string> = {};

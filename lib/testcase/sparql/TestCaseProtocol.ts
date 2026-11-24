@@ -183,12 +183,16 @@ export class TestCaseProtocol implements ITestCaseSparql {
 
   /**
    * Determine the endpoint that the protocol requests must be sent to.
+   * Skips the test if the engine cannot start an endpoint, and fails it if the engine can but none was given.
+   * @param engine The engine under test.
    * @param injectArguments The custom engine options.
+   * @return The endpoint URL.
    */
-  public static getEndpoint(injectArguments: IProtocolTestOptions): string {
+  public static getEndpoint(engine: IQueryEngine, injectArguments: IProtocolTestOptions): string {
     const endpoint = injectArguments && injectArguments.protocolEndpoint;
     if (!endpoint) {
-      throw new ErrorSkipped('Protocol tests require an endpoint from startProtocolEndpoint or the protocolEndpoint option.');
+      const message = 'Protocol tests require an endpoint from startProtocolEndpoint or the protocolEndpoint option.';
+      throw engine.startProtocolEndpoint ? new ErrorTest(message) : new ErrorSkipped(message);
     }
     return endpoint;
   }
@@ -229,8 +233,8 @@ export class TestCaseProtocol implements ITestCaseSparql {
     return Math.floor(status / 100);
   }
 
-  public async test(_engine: IQueryEngine, injectArguments: IProtocolTestOptions): Promise<void> {
-    const endpoint = TestCaseProtocol.getEndpoint(injectArguments);
+  public async test(engine: IQueryEngine, injectArguments: IProtocolTestOptions): Promise<void> {
+    const endpoint = TestCaseProtocol.getEndpoint(engine, injectArguments);
 
     if (this.graphData.length > 0) {
       await this.loadGraphData(endpoint);

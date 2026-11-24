@@ -39,8 +39,8 @@ export class TestCaseServiceDescription implements ITestCaseSparql {
     Object.assign(this, testCaseData);
   }
 
-  public async test(_engine: IQueryEngine, injectArguments: IServiceDescriptionTestOptions): Promise<void> {
-    const endpoint = TestCaseServiceDescription.getEndpoint(injectArguments);
+  public async test(engine: IQueryEngine, injectArguments: IServiceDescriptionTestOptions): Promise<void> {
+    const endpoint = TestCaseServiceDescription.getEndpoint(engine, injectArguments);
 
     switch (this.name) {
       case 'GET on endpoint returns RDF':
@@ -64,10 +64,18 @@ export class TestCaseServiceDescription implements ITestCaseSparql {
     }
   }
 
-  private static getEndpoint(injectArguments: IServiceDescriptionTestOptions): string {
+  /**
+   * Determine and validate the endpoint whose service description is tested.
+   * Skips the test if the engine cannot start an endpoint, and fails it if the engine can but none was given.
+   * @param engine The engine under test.
+   * @param injectArguments The custom engine options.
+   * @return The endpoint URL.
+   */
+  private static getEndpoint(engine: IQueryEngine, injectArguments: IServiceDescriptionTestOptions): string {
     const endpoint = injectArguments && injectArguments.serviceDescriptionEndpoint;
     if (!endpoint) {
-      throw new ErrorSkipped('Service-description tests require an endpoint from startServiceDescriptionEndpoint or the serviceDescriptionEndpoint option.');
+      const message = 'Service-description tests require an endpoint from startServiceDescriptionEndpoint or the serviceDescriptionEndpoint option.';
+      throw engine.startServiceDescriptionEndpoint ? new ErrorTest(message) : new ErrorSkipped(message);
     }
     try {
       const url = new URL(endpoint);

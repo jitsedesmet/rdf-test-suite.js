@@ -271,8 +271,9 @@ $ rdf-test-suite myengine.js http://w3c.github.io/rdf-tests/sparql/sparql11/mani
   -i '{ "graphStoreEndpoint": "http://localhost:3000/sparql" }'
 ```
 
-These tests, and the CSV result format tests that need `queryResultFormat`,
-are skipped when the engine does not provide what they need.
+The runner only calls these `start*Endpoint` methods when `-s` selects their specification.
+Without an endpoint, these tests are skipped if the engine lacks the method, and fail otherwise.
+CSV result format tests are likewise skipped if the engine lacks `queryResultFormat`.
 
 ### Test timeouts
 

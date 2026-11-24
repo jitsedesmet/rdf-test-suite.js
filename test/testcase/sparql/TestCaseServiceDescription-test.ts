@@ -1,4 +1,5 @@
 import { ErrorSkipped } from '../../../lib/ErrorSkipped';
+import { ErrorTest } from '../../../lib/ErrorTest';
 import { TestCaseServiceDescription, TestCaseServiceDescriptionHandler } from '../../../lib/testcase/sparql/TestCaseServiceDescription';
 
 const endpoint = 'http://example.org/sparql';
@@ -52,6 +53,11 @@ describe('TestCaseServiceDescriptionHandler', () => {
       const testCase = await handler.resourceToTestCase(<any> {}, testCaseData('GET on endpoint returns RDF'));
       await expect(testCase.test(<any> {}, {})).rejects.toThrow(ErrorSkipped);
       await expect(testCase.test(<any> {}, {})).rejects.toThrow('require an endpoint from startServiceDescriptionEndpoint');
+    });
+
+    it('should fail without an endpoint if the engine can start one', async() => {
+      const testCase = await handler.resourceToTestCase(<any> {}, testCaseData('GET on endpoint returns RDF'));
+      await expect(testCase.test(<any> { startServiceDescriptionEndpoint: jest.fn() }, {})).rejects.toThrow(ErrorTest);
     });
 
     it('should reject an endpoint with query parameters', async() => {

@@ -2,6 +2,7 @@ import { Parser } from 'n3';
 import type { Resource } from 'rdf-object';
 import { RdfObjectLoader } from 'rdf-object';
 import { ErrorSkipped } from '../../../lib/ErrorSkipped';
+import { ErrorTest } from '../../../lib/ErrorTest';
 import {
   TestCaseGraphStoreProtocol,
   TestCaseGraphStoreProtocolHandler,
@@ -213,6 +214,11 @@ describe('TestCaseGraphStoreProtocolHandler', () => {
       await expect(testCase.test(<any> {}, {})).rejects.toThrow(ErrorSkipped);
       await expect(testCase.test(<any> {}, {}))
         .rejects.toThrow('require an endpoint from startGraphStoreEndpoint');
+    });
+
+    it('should fail without an endpoint if the engine can start one', async() => {
+      const testCase = await toTestCase(okRequest);
+      await expect(testCase.test(<any> { startGraphStoreEndpoint: jest.fn() }, {})).rejects.toThrow(ErrorTest);
     });
 
     it('should skip a test that requires an unsupported feature', async() => {
