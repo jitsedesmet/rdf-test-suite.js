@@ -1,6 +1,7 @@
 import { Parser } from 'n3';
 import type { Resource } from 'rdf-object';
 import { RdfObjectLoader } from 'rdf-object';
+import { ErrorSkipped } from '../../../lib/ErrorSkipped';
 import { TestCaseProtocol, TestCaseProtocolHandler } from '../../../lib/testcase/sparql/TestCaseProtocol';
 
 const endpoint = 'http://example.org/sparql';
@@ -181,8 +182,9 @@ describe('TestCaseProtocolHandler', () => {
       ht:resp [ mf:expectedStatus hts:StatusCode2xx ]
     ]`;
 
-    it('should require an endpoint', async() => {
+    it('should skip without an endpoint', async() => {
       const testCase = await toTestCase(okRequest);
+      await expect(testCase.test(<any> {}, {})).rejects.toThrow(ErrorSkipped);
       await expect(testCase.test(<any> {}, {}))
         .rejects.toThrow('require an endpoint from startProtocolEndpoint');
     });

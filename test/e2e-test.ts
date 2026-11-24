@@ -109,11 +109,12 @@ describe('e2e tests on the test suite runner', () => {
   });
 
   describe('query', () => {
-    for (const [ spec, minimumPassingCount ] of Object.entries({
-      'http://www.w3.org/TR/sparql11-query/': 300,
-      'http://www.w3.org/TR/sparql11-update/': 157,
-      'http://www.w3.org/TR/sparql11-results-csv-tsv/': 3,
-      'http://www.w3.org/TR/sparql11-results-json/': 4,
+    for (const [ spec, { minimumPassingCount, expectedSkippedCount }] of Object.entries({
+      'http://www.w3.org/TR/sparql11-query/': { minimumPassingCount: 300, expectedSkippedCount: 0 },
+      'http://www.w3.org/TR/sparql11-update/': { minimumPassingCount: 157, expectedSkippedCount: 0 },
+      // The CSV tests are skipped, as this engine does not implement queryResultFormat
+      'http://www.w3.org/TR/sparql11-results-csv-tsv/': { minimumPassingCount: 3, expectedSkippedCount: 4 },
+      'http://www.w3.org/TR/sparql11-results-json/': { minimumPassingCount: 4, expectedSkippedCount: 0 },
       // Federated spec tries to do external queries
       // "http://www.w3.org/TR/sparql11-federated-query/",
       // Service-description, protocol and graph store tests require a separately configured HTTP endpoint
@@ -134,7 +135,7 @@ describe('e2e tests on the test suite runner', () => {
           }
         }
 
-        expect(skipped).toBe(0);
+        expect(skipped).toBe(expectedSkippedCount);
 
         // For (const r of result) {
         //   if (!(r.ok || r.skipped)) {

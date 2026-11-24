@@ -214,7 +214,7 @@ export class TestCaseGraphStoreProtocol implements ITestCaseSparql {
   public static getEndpoint(injectArguments: IGraphStoreProtocolTestOptions): string {
     const endpoint = injectArguments && injectArguments.graphStoreEndpoint;
     if (!endpoint) {
-      throw new ErrorTest('Graph store protocol tests require an endpoint from startGraphStoreEndpoint or the graphStoreEndpoint option.');
+      throw new ErrorSkipped('Graph store protocol tests require an endpoint from startGraphStoreEndpoint or the graphStoreEndpoint option.');
     }
     return endpoint;
   }

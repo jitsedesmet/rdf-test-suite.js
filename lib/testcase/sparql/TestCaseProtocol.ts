@@ -1,6 +1,7 @@
 import type * as RDF from '@rdfjs/types';
 import type { Resource } from 'rdf-object';
 import { termToString } from 'rdf-string-ttl';
+import { ErrorSkipped } from '../../ErrorSkipped';
 import { ErrorTest } from '../../ErrorTest';
 import type { IFetchOptions } from '../../Util';
 import type { ITestCaseData } from '../ITestCase';
@@ -187,7 +188,7 @@ export class TestCaseProtocol implements ITestCaseSparql {
   public static getEndpoint(injectArguments: IProtocolTestOptions): string {
     const endpoint = injectArguments && injectArguments.protocolEndpoint;
     if (!endpoint) {
-      throw new ErrorTest('Protocol tests require an endpoint from startProtocolEndpoint or the protocolEndpoint option.');
+      throw new ErrorSkipped('Protocol tests require an endpoint from startProtocolEndpoint or the protocolEndpoint option.');
     }
     return endpoint;
   }

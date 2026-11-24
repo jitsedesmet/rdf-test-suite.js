@@ -1,6 +1,7 @@
 import { Parser } from 'n3';
 import type { Resource } from 'rdf-object';
 import { RdfObjectLoader } from 'rdf-object';
+import { ErrorSkipped } from '../../../lib/ErrorSkipped';
 import {
   TestCaseGraphStoreProtocol,
   TestCaseGraphStoreProtocolHandler,
@@ -207,8 +208,9 @@ describe('TestCaseGraphStoreProtocolHandler', () => {
       ht:absolutePath "/gsp/graph" ; ht:methodName "GET" ; ht:resp [ mf:expectedStatus hts:OK ]
     ]`;
 
-    it('should require an endpoint', async() => {
+    it('should skip without an endpoint', async() => {
       const testCase = await toTestCase(okRequest);
+      await expect(testCase.test(<any> {}, {})).rejects.toThrow(ErrorSkipped);
       await expect(testCase.test(<any> {}, {}))
         .rejects.toThrow('require an endpoint from startGraphStoreEndpoint');
     });

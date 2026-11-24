@@ -1,6 +1,7 @@
 import { ContextParser } from 'jsonld-context-parser';
 import { DataFactory } from 'rdf-data-factory';
 import { Resource } from 'rdf-object';
+import { ErrorSkipped } from '../../../lib/ErrorSkipped';
 import { ErrorTest } from '../../../lib/ErrorTest';
 import { TestCaseCsvResultFormat, TestCaseCsvResultFormatHandler } from '../../../lib/testcase/sparql/TestCaseCsvResultFormat';
 
@@ -192,9 +193,9 @@ describe('TestCaseCsvResultFormat', () => {
       );
     });
 
-    it('should throw an ErrorTest if queryResultFormat is missing on the engine', async() => {
+    it('should throw an ErrorSkipped if queryResultFormat is missing on the engine', async() => {
       const engine: any = {};
-      await expect(testCase.test(engine, {})).rejects.toThrow(ErrorTest);
+      await expect(testCase.test(engine, {})).rejects.toThrow(ErrorSkipped);
       await expect(testCase.test(engine, {})).rejects.toThrow('CSV result format tests require queryResultFormat to be implemented by the query engine.');
     });
 

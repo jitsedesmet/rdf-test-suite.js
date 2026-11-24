@@ -1,3 +1,4 @@
+import { ErrorSkipped } from '../../../lib/ErrorSkipped';
 import { TestCaseServiceDescription, TestCaseServiceDescriptionHandler } from '../../../lib/testcase/sparql/TestCaseServiceDescription';
 
 const endpoint = 'http://example.org/sparql';
@@ -47,8 +48,9 @@ describe('TestCaseServiceDescriptionHandler', () => {
   });
 
   describe('#test', () => {
-    it('should require an endpoint', async() => {
+    it('should skip without an endpoint', async() => {
       const testCase = await handler.resourceToTestCase(<any> {}, testCaseData('GET on endpoint returns RDF'));
+      await expect(testCase.test(<any> {}, {})).rejects.toThrow(ErrorSkipped);
       await expect(testCase.test(<any> {}, {})).rejects.toThrow('require an endpoint from startServiceDescriptionEndpoint');
     });
 

@@ -271,6 +271,9 @@ $ rdf-test-suite myengine.js http://w3c.github.io/rdf-tests/sparql/sparql11/mani
   -i '{ "graphStoreEndpoint": "http://localhost:3000/sparql" }'
 ```
 
+These tests, and the CSV result format tests that need `queryResultFormat`,
+are skipped when the engine does not provide what they need.
+
 ### Test timeouts
 
 By default, all tests are allowed to run 3000 ms.

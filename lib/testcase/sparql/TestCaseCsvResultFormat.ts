@@ -1,6 +1,7 @@
 import type * as RDF from '@rdfjs/types';
 import { parse } from 'papaparse';
 import type { Resource } from 'rdf-object';
+import { ErrorSkipped } from '../../ErrorSkipped';
 import { ErrorTest } from '../../ErrorTest';
 import type { IFetchOptions, IFetchResponse } from '../../Util';
 import { Util } from '../../Util';
@@ -184,7 +185,7 @@ export class TestCaseCsvResultFormat implements ITestCaseSparql {
 
   public async test(engine: IQueryEngine, injectArguments: any): Promise<void> {
     if (!engine.queryResultFormat) {
-      throw new ErrorTest('CSV result format tests require queryResultFormat to be implemented by the query engine.');
+      throw new ErrorSkipped('CSV result format tests require queryResultFormat to be implemented by the query engine.');
     }
 
     const result = await stringifyStream(await engine.queryResultFormat(
